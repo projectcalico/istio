@@ -20,11 +20,7 @@ function usage() {
 
 function docker_push() {
   local im="${1}"
-  if [[ "${im}" =~ ^gcr\.io ]]; then
-    gcloud docker -- push ${im}
-  else
-    docker push ${im}
-  fi
+  docker push ${im}
 }
 
 # Tag and push
