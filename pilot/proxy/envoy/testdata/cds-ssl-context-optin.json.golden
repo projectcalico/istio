@@ -193,6 +193,24 @@
       "max_requests": 10000
      }
     }
+   },
+   {
+    "name": "authz_server",
+    "connect_timeout_ms": 5000,
+    "type": "static",
+    "lb_type": "round_robin",
+    "hosts": [
+     {
+      "url": "unix:///var/run/dikastes/dikastes.sock"
+     }
+    ],
+    "features": "http2",
+    "circuit_breakers": {
+     "default": {
+      "max_pending_requests": 10000,
+      "max_requests": 10000
+     }
+    }
    }
   ]
  }

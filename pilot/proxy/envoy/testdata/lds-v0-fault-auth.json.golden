@@ -356,6 +356,13 @@
        "filters": [
         {
          "type": "decoder",
+         "name": "authz",
+         "config": {
+          "disable_uds": true
+         }
+        },
+        {
+         "type": "decoder",
          "name": "mixer",
          "config": {
           "mixer_attributes": {
@@ -402,6 +409,13 @@
     "name": "tcp_10.1.1.0_1090",
     "filters": [
      {
+      "type": "read",
+      "name": "authz",
+      "config": {
+       "disable_uds": true
+      }
+     },
+     {
       "type": "both",
       "name": "mixer",
       "config": {
@@ -441,6 +455,13 @@
     "address": "tcp://10.1.1.0:1100",
     "name": "mongo_10.1.1.0_1100",
     "filters": [
+     {
+      "type": "read",
+      "name": "authz",
+      "config": {
+       "disable_uds": true
+      }
+     },
      {
       "type": "both",
       "name": "mixer",
@@ -488,6 +509,13 @@
     "address": "tcp://10.1.1.0:1110",
     "name": "redis_10.1.1.0_1110",
     "filters": [
+     {
+      "type": "read",
+      "name": "authz",
+      "config": {
+       "disable_uds": true
+      }
+     },
      {
       "type": "both",
       "name": "mixer",
@@ -581,6 +609,13 @@
         ]
        },
        "filters": [
+        {
+         "type": "decoder",
+         "name": "authz",
+         "config": {
+          "disable_uds": true
+         }
+        },
         {
          "type": "decoder",
          "name": "mixer",

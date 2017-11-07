@@ -238,6 +238,13 @@
        },
        "filters": [
         {
+         "type": "decoder",
+         "name": "authz",
+         "config": {
+          "disable_uds": true
+         }
+        },
+        {
          "type": "",
          "name": "cors",
          "config": {}
@@ -264,6 +271,13 @@
     "filters": [
      {
       "type": "read",
+      "name": "authz",
+      "config": {
+       "disable_uds": true
+      }
+     },
+     {
+      "type": "read",
       "name": "tcp_proxy",
       "config": {
        "stat_prefix": "tcp",
@@ -286,6 +300,13 @@
     "address": "tcp://10.1.1.1:1100",
     "name": "mongo_10.1.1.1_1100",
     "filters": [
+     {
+      "type": "read",
+      "name": "authz",
+      "config": {
+       "disable_uds": true
+      }
+     },
      {
       "type": "both",
       "name": "mongo_proxy",
@@ -317,6 +338,13 @@
     "address": "tcp://10.1.1.1:1110",
     "name": "redis_10.1.1.1_1110",
     "filters": [
+     {
+      "type": "read",
+      "name": "authz",
+      "config": {
+       "disable_uds": true
+      }
+     },
      {
       "type": "both",
       "name": "redis_proxy",
@@ -389,6 +417,13 @@
         ]
        },
        "filters": [
+        {
+         "type": "decoder",
+         "name": "authz",
+         "config": {
+          "disable_uds": true
+         }
+        },
         {
          "type": "",
          "name": "cors",

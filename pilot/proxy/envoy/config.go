@@ -34,6 +34,8 @@ import (
 	"istio.io/istio/pilot/proxy"
 )
 
+const DikastesSocketDir = "/var/run/dikastes"
+
 // Config generation main functions.
 // The general flow of the generation process consists of the following steps:
 // - routes are created for each destination, with referenced clusters stored as a special field
@@ -188,6 +190,22 @@ func buildClusters(env proxy.Environment, node proxy.Node) (Clusters, error) {
 	if env.Mesh.MixerAddress != "" {
 		clusters = append(clusters, buildMixerCluster(env.Mesh, node, env.MixerSAN))
 	}
+
+	// Add a cluster for Authz
+	clusters = append(clusters, &Cluster{
+		Name:             "authz_server",
+		ConnectTimeoutMs: 5000,
+		Type:             ClusterTypeStatic,
+		CircuitBreaker: &CircuitBreaker{
+			DefaultCBPriority{
+				MaxPendingRequests: 10000,
+				MaxRequests:        10000,
+				},
+			},
+		LbType:   LbTypeRoundRobin,
+		Features: ClusterFeatureHTTP2,
+		Hosts:    []Host{{URL: "unix://" + DikastesSocketDir + "/dikastes.sock"}},
+	})
 
 	return clusters, nil
 }
@@ -424,6 +442,42 @@ func mayApplyInboundAuth(listener *Listener, mesh *proxyconfig.MeshConfig,
 	if shouldApplyAuth(mesh, serviceAuthPolicy) {
 		listener.SSLContext = buildListenerSSLContext(proxy.AuthCertsPath)
 	}
+}
+
+// addHTTPAuthzFilter adds the authz filter to a Listener, which must have an instance of the HTTPConnection manager
+// in its network filter list.
+func addHTTPAuthzFilter(listener *Listener) {
+	var httpManagerConfig NetworkFilterConfig
+	for _, filter := range listener.Filters {
+		if filter.Name == HTTPConnectionManager {
+			httpManagerConfig = filter.Config
+			break
+		}
+	}
+	if httpManagerConfig != nil {
+		// Found HTTP Listener
+		cfg := httpManagerConfig.(*HTTPFilterConfig)
+		// Prepend; it must be the first filter so a failed authorization will close the connection.
+		authzHttp := HTTPFilter{
+			Type:   decoder,
+			Name:   "authz",
+			Config: &AuthzFilterConfig{DisableUDS: true},
+		}
+		cfg.Filters = append([]HTTPFilter{authzHttp}, cfg.Filters...)
+	} else {
+		glog.Fatalf("tried to add HTTP Authz filter to non-HTTP listener %v", listener)
+	}
+}
+
+// addTCPAuthzFilter adds the authz filter to a Listener as a NetworkFilter for TCP listeners.
+func addTCPAuthzFilter(listener *Listener) {
+	authzTCP := NetworkFilter{
+		Type:   read,
+		Name:   "authz",
+		Config: &AuthzFilterConfig{DisableUDS: true},
+	}
+	// Prepend; it must be the first filter so a failed authorization will close the connection.
+	listener.Filters = append([]*NetworkFilter{&authzTCP}, listener.Filters...)
 }
 
 // buildTCPListener constructs a listener for the TCP proxy
@@ -758,6 +812,7 @@ func buildInboundListeners(mesh *proxyconfig.MeshConfig, sidecar proxy.Node,
 			config := &HTTPRouteConfig{VirtualHosts: []*VirtualHost{host}}
 			listener = buildHTTPListener(mesh, sidecar, instances, config, endpoint.Address,
 				endpoint.Port, "", false, IngressTraceOperation)
+			addHTTPAuthzFilter(listener)
 
 		case model.ProtocolTCP, model.ProtocolHTTPS, model.ProtocolMongo, model.ProtocolRedis:
 			listener = buildTCPListener(&TCPRouteConfig{
@@ -773,6 +828,7 @@ func buildInboundListeners(mesh *proxyconfig.MeshConfig, sidecar proxy.Node,
 				}
 				listener.Filters = append([]*NetworkFilter{filter}, listener.Filters...)
 			}
+			addTCPAuthzFilter(listener)
 
 		default:
 			glog.V(4).Infof("Unsupported inbound protocol %v for port %#v", protocol, servicePort)

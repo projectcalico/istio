@@ -488,6 +488,12 @@ type HTTPFilterTraceConfig struct {
 	OperationName string `json:"operation_name"`
 }
 
+type AuthzFilterConfig struct {
+	DisableUDS bool `json:"disable_uds"`
+}
+
+func (*AuthzFilterConfig) isNetworkFilterConfig() {}
+
 // TCPRoute definition
 type TCPRoute struct {
 	Cluster           string   `json:"cluster"`
