@@ -83,3 +83,19 @@ racetest:
 platform/kube/config:
 	@ln -s ~/.kube/config platform/kube/
 
+.PHONY: localtest
+localtest: build
+	@bazel test //pilot/adapter/config/aggregate:go_default_xtest \
+                //pilot/adapter/config/crd:go_default_xtest \
+                //pilot/adapter/config/ingress:go_default_test \
+                //pilot/adapter/config/memory:go_default_xtest  \
+                //pilot/adapter/serviceregistry/aggregate:go_default_test \
+                //pilot/model:go_default_test \
+                //pilot/model:go_default_xtest \
+                //pilot/platform/consul:go_default_test \
+                //pilot/platform/eureka:go_default_test \
+                //pilot/proxy/envoy:go_default_test \
+                //pilot/proxy:go_default_test \
+                //pilot/proxy:go_default_xtest \
+                //pilot/test/mock:go_default_test \
+                //pilot/tools/version:go_default_test
