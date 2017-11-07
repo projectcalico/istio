@@ -42,6 +42,7 @@ import (
 
 	proxyconfig "istio.io/api/proxy/v1/config"
 	"istio.io/istio/pilot/proxy"
+	"istio.io/istio/pilot/proxy/envoy"
 	"istio.io/istio/pilot/tools/version"
 )
 
@@ -440,6 +441,18 @@ func injectIntoSpec(p *Params, spec *v1.PodSpec, metadata *metav1.ObjectMeta) {
 				SecretName: istioCertSecretPrefix + sa,
 				Optional:   (func(b bool) *bool { return &b })(true),
 			},
+		},
+	})
+
+	// Dikastes prototype: Inject volume with Dikastes unix domain socket.
+	volumeMounts = append(volumeMounts, v1.VolumeMount{
+		Name:      "dikastes-sock",
+		MountPath: envoy.DikastesSocketDir,
+	})
+	spec.Volumes = append(spec.Volumes, v1.Volume{
+		Name: "dikastes-sock",
+		VolumeSource: v1.VolumeSource{
+			HostPath: &v1.HostPathVolumeSource{envoy.DikastesSocketDir},
 		},
 	})
 

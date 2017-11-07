@@ -12,6 +12,7 @@ go_library(
     deps = [
         "//pilot/platform/kube:go_default_library",
         "//pilot/proxy:go_default_library",
+        "//pilot/proxy/envoy:go_default_library",
         "//pilot/tools/version:go_default_library",
         "@com_github_davecgh_go_spew//spew:go_default_library",
         "@com_github_emicklei_go_restful//:go_default_library",

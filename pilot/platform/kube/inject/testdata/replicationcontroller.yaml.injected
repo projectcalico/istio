@@ -80,6 +80,8 @@ spec:
         - mountPath: /etc/certs/
           name: istio-certs
           readOnly: true
+        - mountPath: /var/run/dikastes
+          name: dikastes-sock
       initContainers:
       - args:
         - -p
@@ -104,6 +106,9 @@ spec:
         secret:
           optional: true
           secretName: istio.default
+      - hostPath:
+          path: /var/run/dikastes
+        name: dikastes-sock
 status:
   replicas: 0
 ---
