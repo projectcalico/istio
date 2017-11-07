@@ -65,3 +65,12 @@ pilot/platform/kube/config:
 	@ln -s ~/.kube/config pilot/platform/kube/
 
 .PHONY: artifacts build checkvars clean docker test setup push
+
+.PHONY: localtest
+localtest: build
+	@bazel $(BAZEL_STARTUP_ARGS) test $(BAZEL_TEST_ARGS) -- //... \
+        -//pilot/adapter/config/crd:go_default_test \
+        -//broker/pkg/platform/kube/crd:go_default_test \
+        -//pilot/platform/kube/admit:go_default_test \
+        -//pilot/platform/kube:go_default_test \
+        -//pilot/platform/kube/inject:go_default_test
