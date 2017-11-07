@@ -123,7 +123,7 @@ func (sc *SecretController) Run(stopCh chan struct{}) {
 // Handles the event where a service account is added.
 func (sc *SecretController) saAdded(obj interface{}) {
 	acct := obj.(*v1.ServiceAccount)
-	sc.upsertSecret(acct.GetName(), acct.GetNamespace())
+	sc.upsertSecret(acct.GetName(), acct.GetNamespace(), acct.GetLabels())
 }
 
 // Handles the event where a service account is deleted.
@@ -149,14 +149,14 @@ func (sc *SecretController) saUpdated(oldObj, curObj interface{}) {
 	// We only care the name and namespace of a service account.
 	if curName != oldName || curNamespace != oldNamespace {
 		sc.deleteSecret(oldName, oldNamespace)
-		sc.upsertSecret(curName, curNamespace)
+		sc.upsertSecret(curName, curNamespace, curSa.GetLabels())
 
 		glog.Infof("Service account \"%s\" in namespace \"%s\" has been updated to \"%s\" in namespace \"%s\"",
 			oldName, oldNamespace, curName, curNamespace)
 	}
 }
 
-func (sc *SecretController) upsertSecret(saName, saNamespace string) {
+func (sc *SecretController) upsertSecret(saName, saNamespace string, labels map[string]string) {
 	secret := &v1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
 			Annotations: map[string]string{serviceAccountNameAnnotationKey: saName},
@@ -177,7 +177,7 @@ func (sc *SecretController) upsertSecret(saName, saNamespace string) {
 	}
 
 	// Now we know the secret does not exist yet. So we create a new one.
-	chain, key, err := sc.generateKeyAndCert(saName, saNamespace)
+	chain, key, err := sc.generateKeyAndCert(saName, saNamespace, labels)
 	if err != nil {
 		glog.Errorf("Failed to generate key and certificate for service account %q in namespace %q (error %v)",
 			saName, saNamespace, err)
@@ -221,14 +221,22 @@ func (sc *SecretController) scrtDeleted(obj interface{}) {
 	glog.Infof("Re-create deleted Istio secret")
 
 	saName := scrt.Annotations[serviceAccountNameAnnotationKey]
-	sc.upsertSecret(saName, scrt.GetNamespace())
+	saNamespace := scrt.GetNamespace()
+	saObj, exists := sc.getServiceAccount(saName, saNamespace)
+	if !exists {
+		// Service Account doesn't exist.  Race condition, so don't create a secret for it.
+		return
+	}
+	sc.upsertSecret(saName, saNamespace, saObj.GetLabels())
 }
 
-func (sc *SecretController) generateKeyAndCert(saName string, saNamespace string) ([]byte, []byte, error) {
+func (sc *SecretController) generateKeyAndCert(saName string, saNamespace string, labels map[string]string) (
+	[]byte, []byte, error) {
 	id := fmt.Sprintf("%s://cluster.local/ns/%s/sa/%s", ca.URIScheme, saNamespace, saName)
 	options := ca.CertOptions{
 		Host:       id,
 		RSAKeySize: keySize,
+		Claims:     pki.SecurityClaims{Labels: labels},
 	}
 
 	csrPEM, keyPEM, err := ca.GenCSR(options)
@@ -276,7 +284,12 @@ func (sc *SecretController) scrtUpdated(oldObj, newObj interface{}) {
 
 		saName := scrt.Annotations[serviceAccountNameAnnotationKey]
 
-		chain, key, err := sc.generateKeyAndCert(saName, namespace)
+		saObj, exists := sc.getServiceAccount(saName, namespace)
+		if !exists {
+			// Service account doesn't exist, so don't bother updating.
+			return
+		}
+		chain, key, err := sc.generateKeyAndCert(saName, namespace, saObj.GetLabels())
 		if err != nil {
 			glog.Errorf("Failed to generate key and certificate for service account %q in namespace %q (error %v)",
 				saName, namespace, err)
@@ -292,6 +305,24 @@ func (sc *SecretController) scrtUpdated(oldObj, newObj interface{}) {
 			glog.Errorf("Failed to update secret %s/%s (error: %s)", namespace, name, err)
 		}
 	}
+}
+
+func (sc *SecretController) getServiceAccount(name, namespace string) (*v1.ServiceAccount, bool) {
+	saQuery := &v1.ServiceAccount{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: namespace,
+		},
+	}
+	sa, exists, err := sc.saStore.Get(saQuery)
+	if err != nil {
+		glog.Fatalf("Failed to get Service Account from cache %v", err)
+	}
+	if !exists {
+		glog.Warningf("Service account %v:%v does not exist!", namespace, name)
+		return nil, exists
+	}
+	return sa.(*v1.ServiceAccount), exists
 }
 
 func getSecretName(saName string) string {

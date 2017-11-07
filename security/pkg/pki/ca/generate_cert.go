@@ -69,6 +69,9 @@ type CertOptions struct {
 
 	// The size of RSA private key to be generated.
 	RSAKeySize int
+
+	// Extra security claims
+	Claims pki.SecurityClaims
 }
 
 // URIScheme is the URI scheme for Istio identities.
@@ -172,9 +175,14 @@ func GenCSRTemplate(options CertOptions) x509.CertificateRequest {
 		},
 	}
 
+	template.ExtraExtensions = []pkix.Extension{}
 	if h := options.Host; len(h) > 0 {
 		s := buildSubjectAltNameExtension(h)
-		template.ExtraExtensions = []pkix.Extension{*s}
+		template.ExtraExtensions = append(template.ExtraExtensions, *s)
+	}
+	if !pki.EmptyClaims(options.Claims) {
+		c := pki.BuildClaimsExtension(options.Claims)
+		template.ExtraExtensions = append(template.ExtraExtensions, *c)
 	}
 
 	return template
@@ -211,9 +219,14 @@ func genCertTemplate(options CertOptions) x509.Certificate {
 		BasicConstraintsValid: true,
 	}
 
+	template.ExtraExtensions = []pkix.Extension{}
 	if h := options.Host; len(h) > 0 {
 		s := buildSubjectAltNameExtension(h)
-		template.ExtraExtensions = []pkix.Extension{*s}
+		template.ExtraExtensions = append(template.ExtraExtensions, *s)
+	}
+	if !pki.EmptyClaims(options.Claims) {
+		c := pki.BuildClaimsExtension(options.Claims)
+		template.ExtraExtensions = append(template.ExtraExtensions, *c)
 	}
 
 	if options.IsCA {

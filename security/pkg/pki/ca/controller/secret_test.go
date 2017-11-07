@@ -144,8 +144,13 @@ func TestSecretController(t *testing.T) {
 }
 
 func TestRecoverFromDeletedIstioSecret(t *testing.T) {
-	client := fake.NewSimpleClientset()
+	sa := &v1.ServiceAccount{ObjectMeta: metav1.ObjectMeta{
+		Name:      "test",
+		Namespace: "test-ns",
+	}}
+	client := fake.NewSimpleClientset(sa)
 	controller := NewSecretController(&fakeCa{}, client.CoreV1(), metav1.NamespaceAll)
+	controller.saStore.Add(sa)
 	scrt := createSecret("test", "istio.test", "test-ns")
 	controller.scrtDeleted(scrt)
 
@@ -188,9 +193,15 @@ func TestUpdateSecret(t *testing.T) {
 		},
 	}
 
+	sa := &v1.ServiceAccount{ObjectMeta: metav1.ObjectMeta{
+		Name:      "test",
+		Namespace: "test-ns",
+	}}
 	for k, tc := range testCases {
-		client := fake.NewSimpleClientset()
+
+		client := fake.NewSimpleClientset(sa)
 		controller := NewSecretController(&fakeCa{}, client.CoreV1(), metav1.NamespaceAll)
+		controller.saStore.Add(sa)
 
 		scrt := createSecret("test", "istio.test", "test-ns")
 		if rc := tc.rootCert; rc != nil {
