@@ -47,10 +47,10 @@ bazel build ${BUILD_FLAGS} //pilot/cmd/... //pilot/test/...
 IMAGES=()
 
 pushd docker
-  for image in app proxy proxy_init proxy_debug pilot sidecar_initializer eurekamirror; do
+  for image in proxy proxy_init proxy_debug pilot sidecar_initializer; do
     local_image="${image}:${local_tag}"
-    docker build -q -f "Dockerfile.${image}" -t "${image}" .
-    IMAGES+=("${image}")
+    docker build -q -f "Dockerfile.${image}" -t "istio-${image}" .
+    IMAGES+=("istio-${image}")
   done
 popd
 
