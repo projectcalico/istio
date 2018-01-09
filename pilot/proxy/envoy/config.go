@@ -193,7 +193,7 @@ func buildClusters(env proxy.Environment, node proxy.Node) (Clusters, error) {
 
 	// Add a cluster for Authz
 	clusters = append(clusters, &Cluster{
-		Name:             "authz_server",
+		Name:             AuthZClusterName,
 		ConnectTimeoutMs: 5000,
 		Type:             ClusterTypeStatic,
 		CircuitBreaker: &CircuitBreaker{
@@ -460,8 +460,8 @@ func addHTTPAuthzFilter(listener *Listener) {
 		// Prepend; it must be the first filter so a failed authorization will close the connection.
 		authzHttp := HTTPFilter{
 			Type:   decoder,
-			Name:   "authz",
-			Config: &AuthzFilterConfig{DisableUDS: true},
+			Name:   AuthZFilterName,
+			Config: &AuthzFilterConfig{GrpcCluster:&GrpcClusterConfig{ClusterName: AuthZClusterName}},
 		}
 		cfg.Filters = append([]HTTPFilter{authzHttp}, cfg.Filters...)
 	} else {
@@ -473,8 +473,9 @@ func addHTTPAuthzFilter(listener *Listener) {
 func addTCPAuthzFilter(listener *Listener) {
 	authzTCP := NetworkFilter{
 		Type:   read,
-		Name:   "authz",
-		Config: &AuthzFilterConfig{DisableUDS: true},
+		Name:   AuthZFilterName,
+		Config: &AuthzFilterConfig{StatPrefix:AuthZFilterName,
+			GrpcCluster: &GrpcClusterConfig{ClusterName:AuthZClusterName}},
 	}
 	// Prepend; it must be the first filter so a failed authorization will close the connection.
 	listener.Filters = append([]*NetworkFilter{&authzTCP}, listener.Filters...)

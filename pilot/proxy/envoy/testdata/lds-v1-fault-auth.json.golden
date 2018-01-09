@@ -294,7 +294,9 @@
          "type": "decoder",
          "name": "authz",
          "config": {
-          "disable_uds": true
+          "grpc_cluster": {
+           "cluster_name": "authz_server"
+          }
          }
         },
         {
@@ -348,7 +350,10 @@
       "type": "read",
       "name": "authz",
       "config": {
-       "disable_uds": true
+       "stat_prefix": "authz",
+       "grpc_cluster": {
+        "cluster_name": "authz_server"
+       }
       }
      },
      {
@@ -395,7 +400,10 @@
       "type": "read",
       "name": "authz",
       "config": {
-       "disable_uds": true
+       "stat_prefix": "authz",
+       "grpc_cluster": {
+        "cluster_name": "authz_server"
+       }
       }
      },
      {
@@ -449,7 +457,10 @@
       "type": "read",
       "name": "authz",
       "config": {
-       "disable_uds": true
+       "stat_prefix": "authz",
+       "grpc_cluster": {
+        "cluster_name": "authz_server"
+       }
       }
      },
      {
@@ -549,7 +560,9 @@
          "type": "decoder",
          "name": "authz",
          "config": {
-          "disable_uds": true
+          "grpc_cluster": {
+           "cluster_name": "authz_server"
+          }
          }
         },
         {

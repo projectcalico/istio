@@ -121,6 +121,9 @@ const (
 	decoder = "decoder"
 	read    = "read"
 	both    = "both"
+
+	AuthZFilterName = "authz"
+	AuthZClusterName = "authz_server"
 )
 
 // ListenersALPNProtocols denotes the the list of ALPN protocols that the listener
@@ -489,7 +492,13 @@ type HTTPFilterTraceConfig struct {
 }
 
 type AuthzFilterConfig struct {
-	DisableUDS bool `json:"disable_uds"`
+	StatPrefix string `json:"stat_prefix,omitempty"`
+	GrpcCluster *GrpcClusterConfig `json:"grpc_cluster,omitempty"`
+}
+
+type GrpcClusterConfig struct {
+	ClusterName string `json:"cluster_name"`
+	// TODO: (spikecurtis) include Duration once we move to v2 API.
 }
 
 func (*AuthzFilterConfig) isNetworkFilterConfig() {}

@@ -1,5 +1,5 @@
 # Change this and ../WORKSPACE at the same time
-FROM quay.io/calico/envoy-debug:20171130-d75df7a
+FROM quay.io/calico/envoy-debug:20180105-1175837
 ADD pilot-agent /usr/local/bin/pilot-agent
 
 COPY envoy_pilot.json      /etc/istio/proxy/envoy_pilot.json
