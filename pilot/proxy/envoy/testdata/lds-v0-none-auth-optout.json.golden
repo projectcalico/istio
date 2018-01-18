@@ -292,7 +292,7 @@
        "filters": [
         {
          "type": "decoder",
-         "name": "authz",
+         "name": "ext_authz",
          "config": {
           "grpc_cluster": {
            "cluster_name": "authz_server"
@@ -348,9 +348,9 @@
     "filters": [
      {
       "type": "read",
-      "name": "authz",
+      "name": "ext_authz",
       "config": {
-       "stat_prefix": "authz",
+       "stat_prefix": "ext_authz",
        "grpc_cluster": {
         "cluster_name": "authz_server"
        }
@@ -398,9 +398,9 @@
     "filters": [
      {
       "type": "read",
-      "name": "authz",
+      "name": "ext_authz",
       "config": {
-       "stat_prefix": "authz",
+       "stat_prefix": "ext_authz",
        "grpc_cluster": {
         "cluster_name": "authz_server"
        }
@@ -455,9 +455,9 @@
     "filters": [
      {
       "type": "read",
-      "name": "authz",
+      "name": "ext_authz",
       "config": {
-       "stat_prefix": "authz",
+       "stat_prefix": "ext_authz",
        "grpc_cluster": {
         "cluster_name": "authz_server"
        }
@@ -558,7 +558,7 @@
        "filters": [
         {
          "type": "decoder",
-         "name": "authz",
+         "name": "ext_authz",
          "config": {
           "grpc_cluster": {
            "cluster_name": "authz_server"

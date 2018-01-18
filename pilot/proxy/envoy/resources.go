@@ -122,7 +122,7 @@ const (
 	read    = "read"
 	both    = "both"
 
-	AuthZFilterName = "authz"
+	AuthZFilterName  = "ext_authz"
 	AuthZClusterName = "authz_server"
 )
 
@@ -492,7 +492,7 @@ type HTTPFilterTraceConfig struct {
 }
 
 type AuthzFilterConfig struct {
-	StatPrefix string `json:"stat_prefix,omitempty"`
+	StatPrefix  string             `json:"stat_prefix,omitempty"`
 	GrpcCluster *GrpcClusterConfig `json:"grpc_cluster,omitempty"`
 }
 
