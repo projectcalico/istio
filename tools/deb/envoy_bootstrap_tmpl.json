@@ -89,13 +89,13 @@
 
     },
     {
-    "name": "xds-grpc",
-    "type": "STRICT_DNS",
-    "connect_timeout": {{ .connect_timeout }},
+    "name": "calico.dikastes",
+    "type": "STATIC",
+    "connect_timeout": { "seconds": 0, "nanos": 5000000},
     "lb_policy": "ROUND_ROBIN",
     "hosts": [
     {
-    "socket_address": {{ .pilot_grpc_address }}
+     "pipe": { "path": "/var/run/dikastes/dikastes.sock" }
     }
     ],
     "http2_protocol_options": { }
